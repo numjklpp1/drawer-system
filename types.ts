@@ -2,18 +2,21 @@
 export interface CabinetModel {
   id: string;
   name: string;
-  // UD 系列
-  udLarge: number;
-  udMedium: number;
-  udSmall: number;
-  udP: number
+  // UD 系列 (理想櫃)
+  udL: number;
+  udM: number;
+  udS: number;
+  udP: number;
+  udF: number;
   // AD 系列
-  adLarge: number;
-  adSmall: number;
+  adL: number;
+  adS: number;
   adP: number;
-  // CD 系列
-  cdLarge: number;
-  cdSmall: number;
+  // CT 系列
+  ctL: number;
+  // CB 系列
+  cbL: number;
+  cbS: number;
 }
 
 export interface SelectedItem extends CabinetModel {
@@ -22,13 +25,15 @@ export interface SelectedItem extends CabinetModel {
 }
 
 export interface DrawerTotals {
-  udLarge: number;
-  udMedium: number;
-  udSmall: number;
-  adLarge: number;
-  adSmall: number;
-  cdLarge: number;
-  cdSmall: number;
-  udP:number;
-  adP:number;
+  udL: number;
+  udM: number;
+  udS: number;
+  udP: number;
+  udF: number;
+  adL: number;
+  adS: number;
+  adP: number;
+  ctL: number;
+  cbL: number;
+  cbS: number;
 }

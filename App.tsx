@@ -35,22 +35,24 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 💡 [標註] 核心計算區：在這裡補完掀門的加總邏輯
   const drawerTotals = useMemo((): DrawerTotals => {
     return selectedItems.reduce((acc, item) => ({
-      udLarge: acc.udLarge + (item.udLarge * item.quantity),
-      udMedium: acc.udMedium + (item.udMedium * item.quantity),
-      udSmall: acc.udSmall + (item.udSmall * item.quantity),
-      udP: acc.udP + (item.udP * item.quantity), // 補完 UD 掀門計算
-      adLarge: acc.adLarge + (item.adLarge * item.quantity),
-      adSmall: acc.adSmall + (item.adSmall * item.quantity),
-      adP: acc.adP + (item.adP * item.quantity), // 補完 AD 掀門計算
-      cdLarge: acc.cdLarge + (item.cdLarge * item.quantity),
-      cdSmall: acc.cdSmall + (item.cdSmall * item.quantity),
+      udL: acc.udL + (item.udL * item.quantity),
+      udM: acc.udM + (item.udM * item.quantity),
+      udS: acc.udS + (item.udS * item.quantity),
+      udP: acc.udP + (item.udP * item.quantity),
+      udF: acc.udF + (item.udF * item.quantity),
+      adL: acc.adL + (item.adL * item.quantity),
+      adS: acc.adS + (item.adS * item.quantity),
+      adP: acc.adP + (item.adP * item.quantity),
+      ctL: acc.ctL + (item.ctL * item.quantity),
+      cbL: acc.cbL + (item.cbL * item.quantity),
+      cbS: acc.cbS + (item.cbS * item.quantity),
     }), {
-      udLarge: 0, udMedium: 0, udSmall: 0, udP: 0,
-      adLarge: 0, adSmall: 0, adP: 0,
-      cdLarge: 0, cdSmall: 0
+      udL: 0, udM: 0, udS: 0, udP: 0, udF: 0,
+      adL: 0, adS: 0, adP: 0,
+      ctL: 0,
+      cbL: 0, cbS: 0
     });
   }, [selectedItems]);
 
@@ -61,12 +63,13 @@ const App: React.FC = () => {
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `
-        我有以下櫃子庫存統計：
-        UD系列：大 ${drawerTotals.udLarge}, 中 ${drawerTotals.udMedium}, 小 ${drawerTotals.udSmall}, 掀門 ${drawerTotals.udP}
-        AD系列：大 ${drawerTotals.adLarge}, 小 ${drawerTotals.adSmall}, 掀門 ${drawerTotals.adP}
-        CD系列：大 ${drawerTotals.cdLarge}, 小 ${drawerTotals.cdSmall}
+        我有以下庫存統計：
+        UD系列: L:${drawerTotals.udL}, M:${drawerTotals.udM}, S:${drawerTotals.udS}, P:${drawerTotals.udP}, F:${drawerTotals.udF}
+        AD系列: L:${drawerTotals.adL}, S:${drawerTotals.adS}, P:${drawerTotals.adP}
+        CT系列: L:${drawerTotals.ctL}
+        CB系列: L:${drawerTotals.cbL}, S:${drawerTotals.cbS}
         
-        請根據抽屜與掀門的分類與數量，給出簡短的專業收納或盤點建議。回覆繁體中文。
+        請給出簡短盤點建議。回覆繁體中文。
       `;
 
       const response = await ai.models.generateContent({
@@ -77,7 +80,7 @@ const App: React.FC = () => {
       setAiAnalysis(response.text);
     } catch (error) {
       console.error("AI Analysis failed:", error);
-      setAiAnalysis("分析失敗，請檢查網路。");
+      setAiAnalysis("分析失敗。");
     } finally {
       setIsAiProcessing(false);
     }
@@ -95,7 +98,7 @@ const App: React.FC = () => {
             </div>
             <h1 className="text-xl font-bold text-white tracking-tight">抽屜分類統整系統</h1>
           </div>
-          <div className="text-xs text-slate-500 font-mono hidden sm:block">v2.1 Full Logic</div>
+          <div className="text-xs text-slate-500 font-mono hidden sm:block">v3.2 Updated CD</div>
         </div>
       </header>
 
@@ -123,49 +126,68 @@ const App: React.FC = () => {
             {showSummary && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fade-in">
                 {/* UD 統計卡片 */}
-                <div className="bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-lg">
-                  <h3 className="text-blue-400 font-black mb-3 text-xl border-b border-slate-800 pb-2">UD 系列</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center"><span className="text-slate-400">大抽屜</span><span className="text-2xl font-bold">{drawerTotals.udLarge}</span></div>
-                    <div className="flex justify-between items-center"><span className="text-slate-400">中抽屜</span><span className="text-2xl font-bold">{drawerTotals.udMedium}</span></div>
-                    <div className="flex justify-between items-center"><span className="text-slate-400">小抽屜</span><span className="text-2xl font-bold">{drawerTotals.udSmall}</span></div>
-                    
-                    <div className="flex justify-between items-center"><span className="text-slate-400">掀門</span><span className="text-2xl font-bold">{drawerTotals.udP}</span></div>
+                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg">
+                  <h3 className="text-blue-400 font-black mb-3 text-lg border-b border-slate-800 pb-2">理想櫃 (UD)</h3>
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between items-center"><span className="text-slate-400">udL (大)</span><span className="text-xl font-bold">{drawerTotals.udL}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">udM (中)</span><span className="text-xl font-bold">{drawerTotals.udM}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">udS (小)</span><span className="text-xl font-bold">{drawerTotals.udS}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">udP (掀)</span><span className="text-xl font-bold">{drawerTotals.udP}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">udF (F把)</span><span className="text-xl font-bold">{drawerTotals.udF}</span></div>
                   </div>
                 </div>
 
                 {/* AD 統計卡片 */}
-                <div className="bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-lg">
-                  <h3 className="text-green-400 font-black mb-3 text-xl border-b border-slate-800 pb-2">AD 系列</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center"><span className="text-slate-400">大抽屜</span><span className="text-2xl font-bold">{drawerTotals.adLarge}</span></div>
-                    <div className="flex justify-between items-center"><span className="text-slate-400">小抽屜</span><span className="text-2xl font-bold">{drawerTotals.adSmall}</span></div>
-                    
-                    <div className="flex justify-between items-center"><span className="text-slate-400">掀門</span><span className="text-2xl font-bold">{drawerTotals.adP}</span></div>
+                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg">
+                  <h3 className="text-green-400 font-black mb-3 text-lg border-b border-slate-800 pb-2">AD 系列</h3>
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between items-center"><span className="text-slate-400">adL (大)</span><span className="text-xl font-bold">{drawerTotals.adL}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">adS (小)</span><span className="text-xl font-bold">{drawerTotals.adS}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">adP (掀)</span><span className="text-xl font-bold">{drawerTotals.adP}</span></div>
                   </div>
                 </div>
 
-                {/* CD 統計卡片 */}
-                <div className="bg-slate-900 p-5 rounded-xl border border-slate-800 shadow-lg">
-                  <h3 className="text-purple-400 font-black mb-3 text-xl border-b border-slate-800 pb-2">CD 系列</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center"><span className="text-slate-400">大抽屜</span><span className="text-2xl font-bold">{drawerTotals.cdLarge}</span></div>
-                    <div className="flex justify-between items-center"><span className="text-slate-400">小抽屜</span><span className="text-2xl font-bold">{drawerTotals.cdSmall}</span></div>
+                {/* CD 統計卡片 (合併 CT 與 CB) */}
+                <div className="bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-lg">
+                  <h3 className="text-amber-400 font-black mb-3 text-lg border-b border-slate-800 pb-2">CD 系列</h3>
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between items-center"><span className="text-slate-400">ctL (CT大)</span><span className="text-xl font-bold">{drawerTotals.ctL}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">cbL (CB大)</span><span className="text-xl font-bold">{drawerTotals.cbL}</span></div>
+                    <div className="flex justify-between items-center border-t border-slate-800/50 pt-1"><span className="text-slate-400">cbS (CB小)</span><span className="text-xl font-bold">{drawerTotals.cbS}</span></div>
                   </div>
                 </div>
               </div>
             )}
-
+            
             <button 
               onClick={analyzeWithGemini}
               disabled={isAiProcessing}
-              className="w-full py-3 bg-slate-900 border border-slate-700 hover:border-indigo-500 rounded-xl text-slate-400 hover:text-indigo-400 transition-all text-sm font-medium"
+              className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-medium transition-all flex items-center justify-center gap-2 border border-slate-700"
             >
-              {isAiProcessing ? 'AI 正在分析數據...' : '✨ 獲取庫存配置建議 (AI)'}
+              {isAiProcessing ? (
+                <span className="flex items-center gap-2 italic">
+                  <svg className="animate-spin h-4 w-4 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  AI 分析中...
+                </span>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  使用 AI 生成建議
+                </>
+              )}
             </button>
-            
+
             {aiAnalysis && (
-              <div className="bg-indigo-950/20 backdrop-blur p-4 rounded-lg border border-indigo-900/30 text-slate-300 text-sm animate-fade-in">
+              <div className="p-5 bg-slate-900/80 border border-blue-900/30 rounded-xl text-slate-200 text-sm leading-relaxed shadow-inner animate-fade-in">
+                <div className="flex items-center gap-2 mb-2 text-blue-400 font-bold text-xs uppercase tracking-widest">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                  Gemini 分析結果
+                </div>
                 {aiAnalysis}
               </div>
             )}
@@ -173,19 +195,9 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="mt-20 border-t border-slate-900 py-8 text-center text-slate-700 text-xs">
-        <p>© 2024 Cabinet Drawer Summary System.</p>
+      <footer className="mt-20 border-t border-slate-900 py-8 px-4 text-center">
+        <p className="text-slate-600 text-xs tracking-widest">CABINET CALCULATOR &copy; 2024 PROFESSIONAL GRADE</p>
       </footer>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };
